@@ -224,7 +224,7 @@ public class LogisticRegressionClassifier {
 		
 		List<Double> weightVector = new ArrayList<Double>();
 		
-		for (int weightVectorIndex = 0; weightVectorIndex <= featureVectorSize; ++weightVectorIndex) {
+		for (int weightVectorIndex = 0; weightVectorIndex < featureVectorSize; ++weightVectorIndex) {
 			weightVector.add(Double.valueOf(0.0));
 		}
 		

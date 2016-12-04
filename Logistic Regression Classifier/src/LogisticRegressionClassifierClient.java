@@ -21,7 +21,7 @@ public class LogisticRegressionClassifierClient {
 	
 	private void runClassifier() {
 		
-		DataFileReader dataFileReader = new DataFileReader(TOY_TRAINING_DATA_FILE_PATH, TOY_TESTING_DATA_FILE_PATH);
+		DataFileReader dataFileReader = new DataFileReader(TRAINING_DATA_FILE_PATH, TESTING_DATA_FILE_PATH);
 		List<List<Double>> trainingDataFeatures = dataFileReader.getTrainingDataFeatures();
 		List<BinaryDataLabel> trainingDataLabels = dataFileReader.getTrainingDataLabels();
 		

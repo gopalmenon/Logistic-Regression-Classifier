@@ -174,7 +174,8 @@ public class DataFileReader {
 	private List<List<Double>> getDataFeatures(List<String> rawData) {
 		
 		List<List<Double>> dataFeatures = new ArrayList<List<Double>>(rawData.size());
-		int currentFeatureNumber = 0, currentFeatureValue = 0, lastFeatureNumberAdded = 0;
+		int currentFeatureNumber = 0, lastFeatureNumberAdded = 0;
+		double currentFeatureValue = 0.0;
 		String[] features = null, featureComponents = null;
 		boolean firstTime = true;
 		
@@ -207,7 +208,7 @@ public class DataFileReader {
 				
 				try {
 					currentFeatureNumber = Integer.parseInt(featureComponents[0]);
-					currentFeatureValue = Integer.parseInt(featureComponents[1]);
+					currentFeatureValue = Double.parseDouble(featureComponents[1]);
 				} catch (NumberFormatException e) {
 					System.err.println("Invalid feature value found.");
 					System.exit(0);
