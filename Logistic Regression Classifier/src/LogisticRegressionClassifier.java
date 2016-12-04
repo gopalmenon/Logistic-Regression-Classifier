@@ -126,6 +126,8 @@ public class LogisticRegressionClassifier {
 						
 						//Find the optimum weights by running stochastic gradient descent
 						weightVector = runStochasticGradientDescent(trainingDataSubsetFeatures, trainingDataSubsetLabels, varianceValue.doubleValue(), weightVector);
+						
+						log("Log likelihood for learning rate: " + learningRate + ", variance value: " + varianceValue + ", epoch: " + epochCounter + " is " + getTotalLogLikelihood(trainingDataSubsetFeatures, trainingDataSubsetLabels, weightVector));
 					
 					}
 					
@@ -141,7 +143,7 @@ public class LogisticRegressionClassifier {
 				//If this is the most accurate classification save the weight vector
 				averageAccuracy /= this.crossValidationSplits;
 				
-				log("Learning rate: " + learningRate + ", tradeoff value: " + varianceValue + ", average accuracy: " + averageAccuracy);
+				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average accuracy: " + averageAccuracy);
 				
 				if (averageAccuracy > maximumAccuracy) {
 					maximumAccuracy = averageAccuracy;
@@ -162,6 +164,27 @@ public class LogisticRegressionClassifier {
 	 */
 	private double getNextLearningRate(int stochasticGradientDescentCounter, double originalLearningRate, double varianceValue) {
 		return originalLearningRate / (1 + (originalLearningRate * stochasticGradientDescentCounter / varianceValue));
+	}
+	
+	/**
+	 * @param trainingDataSubsetFeatures
+	 * @param trainingDataSubsetLabels
+	 * @param weightVector
+	 * @return total log likelihood for the data set using the weight vector
+	 */
+	private double getTotalLogLikelihood(List<List<Double>> trainingDataSubsetFeatures, List<BinaryDataLabel> trainingDataSubsetLabels, List<Double> weightVector) {
+		
+		double totalLogLikelihood = 0.0;
+		//Loop through each training record sample
+		int featureVectorCounter = 0;
+		for (List<Double> featureVector : trainingDataSubsetFeatures) {
+			
+			totalLogLikelihood += -1 * Math.log(1.0 + Math.pow(Math.E, -1.0 * trainingDataSubsetLabels.get(featureVectorCounter).getValue() * getDotProduct(weightVector, featureVector)));
+			
+			++featureVectorCounter;
+		}
+		
+		return totalLogLikelihood;
 	}
 	
 	/**
