@@ -15,6 +15,7 @@ public class LogisticRegressionClassifier {
 	public static final List<Double> DEFAULT_LEARNING_RATES = Arrays.asList(Math.pow(10.0, 0.0), Math.pow(10.0, -1.0), Math.pow(10.0, -2.0), Math.pow(10.0, -3.0), Math.pow(10.0, -4.0), Math.pow(10.0, -5.0), Math.pow(10.0, -6.0), Math.pow(10.0, -7.0), Math.pow(10.0, -8.0), Math.pow(10.0, -9.0), Math.pow(10.0, -10.0));
 	public static final List<Double> DEFAULT_VARIANCE_VALUES = Arrays.asList(Math.pow(Math.pow(10.0, 0.0), 2.0), Math.pow(Math.pow(10.0, -1.0), 2.0), Math.pow(Math.pow(10.0, -2.0), 2.0), Math.pow(Math.pow(10.0, -3.0), 2.0), Math.pow(Math.pow(10.0, -4.0), 2.0), Math.pow(Math.pow(10.0, -5.0), 2.0), Math.pow(Math.pow(10.0, -6.0), 2.0), Math.pow(Math.pow(10.0, -7.0), 2.0), Math.pow(Math.pow(10.0, -8.0), 2.0), Math.pow(Math.pow(10.0, -9.0), 2.0), Math.pow(Math.pow(10.0, -10.0), 2.0));
 	public static final String LOG_FILE_NAME = "LogFile.txt";
+	public static final String LOG_LIKELIHOOD_FILE_NAME = "LogLikelihoodFile.txt";
 	
 	private int numberOfEpochsForTraining;
 	private int crossValidationSplits;
@@ -22,7 +23,7 @@ public class LogisticRegressionClassifier {
 	private List<Double> weightVector;
 	private Random randomNumberGenerator;
 	private boolean runInDebug;
-	private PrintWriter out;
+	private PrintWriter out, logLikelihoodOut;
 	private double currentLearningRate;
 	private List<Double> svmObjectiveTrend;
 	private List<Double> bestSvmObjectiveTrend;
@@ -53,6 +54,7 @@ public class LogisticRegressionClassifier {
 		this.runInDebug = runInDebug;
 		try{
 			this.out = new PrintWriter(new FileWriter(logFileName));
+			this.logLikelihoodOut = new PrintWriter(new FileWriter(LOG_LIKELIHOOD_FILE_NAME));
 		} catch (IOException e) {
 			System.err.println("IOException while opening file ");
 			e.printStackTrace();
@@ -127,7 +129,7 @@ public class LogisticRegressionClassifier {
 						//Find the optimum weights by running stochastic gradient descent
 						weightVector = runStochasticGradientDescent(trainingDataSubsetFeatures, trainingDataSubsetLabels, varianceValue.doubleValue(), weightVector);
 						
-						log("Log likelihood for learning rate: " + learningRate + ", variance value: " + varianceValue + ", epoch: " + epochCounter + " is " + getTotalLogLikelihood(trainingDataSubsetFeatures, trainingDataSubsetLabels, weightVector));
+						log("Log likelihood for learning rate: " + learningRate + ", variance value: " + varianceValue + ", epoch: " + epochCounter + " is " + getTotalLogLikelihood(trainingDataSubsetFeatures, trainingDataSubsetLabels, weightVector), logLikelihoodOut);
 					
 					}
 					
@@ -143,7 +145,7 @@ public class LogisticRegressionClassifier {
 				//If this is the most accurate classification save the weight vector
 				averageAccuracy /= this.crossValidationSplits;
 				
-				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average accuracy: " + averageAccuracy);
+				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average accuracy: " + averageAccuracy, out);
 				
 				if (averageAccuracy > maximumAccuracy) {
 					maximumAccuracy = averageAccuracy;
@@ -504,10 +506,10 @@ public class LogisticRegressionClassifier {
 	 * 
 	 * @param stringToLog
 	 */
-	private void log(String stringToLog) {
+	private void log(String stringToLog, PrintWriter printWriter) {
 		
 		if (this.runInDebug) {
-			this.out.println(stringToLog);
+			printWriter.println(stringToLog);
 		}
 		
 	}
@@ -515,8 +517,9 @@ public class LogisticRegressionClassifier {
 	/**
 	 * Close the log file
 	 */
-	public void closeLogFile() {
+	public void closeLogFiles() {
 		this.out.close();
+		this.logLikelihoodOut.close();
 	}
 	
 }

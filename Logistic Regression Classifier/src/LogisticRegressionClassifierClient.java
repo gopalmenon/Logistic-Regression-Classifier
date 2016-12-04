@@ -33,5 +33,7 @@ public class LogisticRegressionClassifierClient {
 		ClassifierMetrics classifierMetrics = new ClassifierMetrics(dataFileReader.getTestingDataLabels(), predictions);
 		System.out.println("Accuracy: " + classifierMetrics.getAccuracy());
 		
+		classifier.closeLogFiles();
+		
 	}
 }
