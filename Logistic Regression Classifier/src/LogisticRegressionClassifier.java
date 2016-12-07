@@ -15,7 +15,7 @@ public class LogisticRegressionClassifier {
 	public static final List<Double> DEFAULT_LEARNING_RATES = Arrays.asList(Math.pow(10.0, 0.0), Math.pow(10.0, -1.0), Math.pow(10.0, -2.0), Math.pow(10.0, -3.0), Math.pow(10.0, -4.0), Math.pow(10.0, -5.0), Math.pow(10.0, -6.0), Math.pow(10.0, -7.0), Math.pow(10.0, -8.0), Math.pow(10.0, -9.0), Math.pow(10.0, -10.0));
 	public static final List<Double> DEFAULT_VARIANCE_VALUES = Arrays.asList(Math.pow(Math.pow(10.0, 0.0), 2.0), Math.pow(Math.pow(10.0, -1.0), 2.0), Math.pow(Math.pow(10.0, -2.0), 2.0), Math.pow(Math.pow(10.0, -3.0), 2.0), Math.pow(Math.pow(10.0, -4.0), 2.0), Math.pow(Math.pow(10.0, -5.0), 2.0), Math.pow(Math.pow(10.0, -6.0), 2.0), Math.pow(Math.pow(10.0, -7.0), 2.0), Math.pow(Math.pow(10.0, -8.0), 2.0), Math.pow(Math.pow(10.0, -9.0), 2.0), Math.pow(Math.pow(10.0, -10.0), 2.0));
 	public static final String LOG_FILE_NAME = "LogFile.txt";
-	public static final String LOG_LIKELIHOOD_FILE_NAME = "LogLikelihoodFile.txt";
+	public static final String OBJECTIVE_VALUE_FILE_NAME = "ObjectiveValue.txt";
 	
 	private int numberOfEpochsForTraining;
 	private int crossValidationSplits;
@@ -54,7 +54,7 @@ public class LogisticRegressionClassifier {
 		this.runInDebug = runInDebug;
 		try{
 			this.out = new PrintWriter(new FileWriter(logFileName));
-			this.logLikelihoodOut = new PrintWriter(new FileWriter(LOG_LIKELIHOOD_FILE_NAME));
+			this.logLikelihoodOut = new PrintWriter(new FileWriter(OBJECTIVE_VALUE_FILE_NAME));
 		} catch (IOException e) {
 			System.err.println("IOException while opening file ");
 			e.printStackTrace();
@@ -72,7 +72,7 @@ public class LogisticRegressionClassifier {
 	 */
 	public void fit(List<List<Double>> featureVectors, List<BinaryDataLabel> trainingDataLabels) {
 		
-		double currentAccuracy = 0.0, maximumAccuracy = Double.MIN_VALUE;
+		double currentF1Score = 0.0, maximumF1Score = Double.MIN_VALUE;
 				
 		//Run through multiple learning rates
 		for (Double learningRate : this.learningRatesForTraining) {
@@ -83,7 +83,7 @@ public class LogisticRegressionClassifier {
 			for (Double varianceValue : this.varianceValuesForTraining) {
 				
 				//Run k-fold cross validation
-				double averageAccuracy = 0.0;
+				double averageF1Score = 0.0;
 				
 				List<FeaturesAndLabels> crossValidationData = getCrossValidationData(this.crossValidationSplits, featureVectors, trainingDataLabels);
 
@@ -129,7 +129,7 @@ public class LogisticRegressionClassifier {
 						//Find the optimum weights by running stochastic gradient descent
 						weightVector = runStochasticGradientDescent(trainingDataSubsetFeatures, trainingDataSubsetLabels, varianceValue.doubleValue(), weightVector);
 						
-						log("Log likelihood for learning rate: " + learningRate + ", variance value: " + varianceValue + ", epoch: " + epochCounter + " is " + getTotalLogLikelihood(trainingDataSubsetFeatures, trainingDataSubsetLabels, weightVector), logLikelihoodOut);
+						log("Objective value for learning rate: " + learningRate + ", variance value: " + varianceValue + ", epoch: " + epochCounter + " is " + getTotalObjectiveValue(trainingDataSubsetFeatures, trainingDataSubsetLabels, weightVector, varianceValue.doubleValue()), logLikelihoodOut);
 					
 					}
 					
@@ -137,18 +137,18 @@ public class LogisticRegressionClassifier {
 					List<BinaryDataLabel> predictions = getPredictions(testingDataSubsetFeatures, weightVector);
 					
 					//Get accuracy for current settings
-					currentAccuracy = new ClassifierMetrics(testingDataSubsetLabels, predictions).getAccuracy();
-					averageAccuracy += currentAccuracy;
+					currentF1Score = new ClassifierMetrics(testingDataSubsetLabels, predictions).getF1Score();
+					averageF1Score += currentF1Score;
 					
 				}
 				
 				//If this is the most accurate classification save the weight vector
-				averageAccuracy /= this.crossValidationSplits;
+				averageF1Score /= this.crossValidationSplits;
 				
-				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average accuracy: " + averageAccuracy, out);
+				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average F1 score: " + averageF1Score, out);
 				
-				if (averageAccuracy > maximumAccuracy) {
-					maximumAccuracy = averageAccuracy;
+				if (averageF1Score > maximumF1Score) {
+					maximumF1Score = averageF1Score;
 					this.weightVector = weightVector;
 					this.bestSvmObjectiveTrend = this.svmObjectiveTrend;
 				}
@@ -174,19 +174,24 @@ public class LogisticRegressionClassifier {
 	 * @param weightVector
 	 * @return total log likelihood for the data set using the weight vector
 	 */
-	private double getTotalLogLikelihood(List<List<Double>> trainingDataSubsetFeatures, List<BinaryDataLabel> trainingDataSubsetLabels, List<Double> weightVector) {
+	private double getTotalObjectiveValue(List<List<Double>> trainingDataSubsetFeatures, List<BinaryDataLabel> trainingDataSubsetLabels, List<Double> weightVector, double varianceValue) {
 		
-		double totalLogLikelihood = 0.0;
+		double totalObjectiveValue = 0.0;
 		//Loop through each training record sample
 		int featureVectorCounter = 0;
+		
+		//Compute loss value
 		for (List<Double> featureVector : trainingDataSubsetFeatures) {
 			
-			totalLogLikelihood += -1 * Math.log(1.0 + Math.pow(Math.E, -1.0 * trainingDataSubsetLabels.get(featureVectorCounter).getValue() * getDotProduct(weightVector, featureVector)));
+			totalObjectiveValue += Math.log(1.0 + Math.pow(Math.E, -1.0 * trainingDataSubsetLabels.get(featureVectorCounter).getValue() * getDotProduct(weightVector, featureVector)));
 			
 			++featureVectorCounter;
 		}
 		
-		return totalLogLikelihood;
+		//Add the regularizer value
+		totalObjectiveValue += (1.0 / Math.pow(varianceValue, 2.0)) * getDotProduct(weightVector, weightVector);
+		
+		return totalObjectiveValue;
 	}
 	
 	/**

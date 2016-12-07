@@ -31,7 +31,7 @@ public class LogisticRegressionClassifierClient {
 		List<BinaryDataLabel> predictions = classifier.getPredictions(dataFileReader.getTestingDataFeatures());
 		
 		ClassifierMetrics classifierMetrics = new ClassifierMetrics(dataFileReader.getTestingDataLabels(), predictions);
-		System.out.println("Accuracy: " + classifierMetrics.getAccuracy());
+		System.out.println("F1 Score for prediction: " + classifierMetrics.getF1Score());
 		
 		classifier.closeLogFiles();
 		
