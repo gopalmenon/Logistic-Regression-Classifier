@@ -72,7 +72,7 @@ public class LogisticRegressionClassifier {
 	 */
 	public void fit(List<List<Double>> featureVectors, List<BinaryDataLabel> trainingDataLabels) {
 		
-		double currentF1Score = 0.0, maximumF1Score = Double.MIN_VALUE;
+		double currentAccuracy = 0.0, maximumAccuracy = Double.MIN_VALUE;
 				
 		//Run through multiple learning rates
 		for (Double learningRate : this.learningRatesForTraining) {
@@ -83,7 +83,7 @@ public class LogisticRegressionClassifier {
 			for (Double varianceValue : this.varianceValuesForTraining) {
 				
 				//Run k-fold cross validation
-				double averageF1Score = 0.0;
+				double averageAccuracy = 0.0;
 				
 				List<FeaturesAndLabels> crossValidationData = getCrossValidationData(this.crossValidationSplits, featureVectors, trainingDataLabels);
 
@@ -137,18 +137,18 @@ public class LogisticRegressionClassifier {
 					List<BinaryDataLabel> predictions = getPredictions(testingDataSubsetFeatures, weightVector);
 					
 					//Get accuracy for current settings
-					currentF1Score = new ClassifierMetrics(testingDataSubsetLabels, predictions).getF1Score();
-					averageF1Score += currentF1Score;
+					currentAccuracy = new ClassifierMetrics(testingDataSubsetLabels, predictions).getAccuracy();
+					averageAccuracy += currentAccuracy;
 					
 				}
 				
 				//If this is the most accurate classification save the weight vector
-				averageF1Score /= this.crossValidationSplits;
+				averageAccuracy /= this.crossValidationSplits;
 				
-				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average F1 score: " + averageF1Score, out);
+				log("Learning rate: " + learningRate + ", variance value: " + varianceValue + ", average accuracy: " + averageAccuracy, out);
 				
-				if (averageF1Score > maximumF1Score) {
-					maximumF1Score = averageF1Score;
+				if (averageAccuracy > maximumAccuracy) {
+					maximumAccuracy = averageAccuracy;
 					this.weightVector = weightVector;
 					this.bestSvmObjectiveTrend = this.svmObjectiveTrend;
 				}
